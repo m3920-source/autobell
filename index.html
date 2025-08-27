@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Bell - Bel Sekolah Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+        }
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+        .clock-display {
+            font-variant-numeric: tabular-nums;
+        }
+        .schedule-item.played {
+            opacity: 0.5;
+            background-color: #f8fafc;
+        }
+        .schedule-item.next {
+            background-color: #e0e7ff;
+            border-left: 4px solid #4f46e5;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        
+        <!-- Main Container -->
+        <div class="w-full max-w-6xl mx-auto">
+            
+            <!-- Header -->
+            <header class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800">
+                    <i class="fas fa-bell text-indigo-600"></i> Auto <span class="text-indigo-600">Bell</span>
+                </h1>
+                <p class="text-gray-500 mt-2">Sistem Bel SD IT Nurul Kautsar</p>
+            </header>
+
+            <!-- Main Content -->
+            <main>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="card p-8 text-center flex flex-col justify-center">
+                        <p id="date-display" class="text-lg font-medium text-gray-500 mb-2"></p>
+                        <div id="clock-display" class="clock-display text-5xl sm:text-6xl md:text-7xl font-bold text-indigo-600 tracking-wider"></div>
+                        <div id="status-display" class="mt-4 h-10 flex items-center justify-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-medium transition-all duration-300"></div>
+                    </div>
+                    <div class="card p-8 flex flex-col justify-center">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center"><i class="fas fa-hand-point-up mr-3 text-indigo-500"></i>Kontrol Manual</h2>
+                        <select id="manual-bell-select" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></select>
+                        <button id="play-manual-btn" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-play mr-2"></i> Bunyikan Sekarang
+                        </button>
+                    </div>
+                </div>
+                <div class="card p-8">
+                    <h2 id="schedule-title" class="text-2xl font-bold mb-6 flex items-center"><i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Bel Hari Ini</h2>
+                    <div id="schedule-list" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2"></div>
+                </div>
+            </main>
+
+             <!-- Footer -->
+            <footer class="text-center mt-12 text-gray-500">
+                <p>Auto Bell - SD IT Nurul Kautsar.</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // =================================
+            // KONFIGURASI JADWAL & SUARA
+            // =================================
+            
+            const regularSchedule = [
+                { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
+                { time: "09:15:00", label: "Pergantian Jam Pelajaran", sound: "changePeriod" },
+                { time: "10:25:00", label: "Waktu Istirahat", sound: "startBreak" },
+                { time: "10:50:00", label: "Akhir Istirahat", sound: "endBreak" },
+                { time: "14:00:00", label: "Bangun Tidur", sound: "changePeriod" },
+                { time: "15:50:00", label: "Waktu Pulang Sekolah", sound: "dismissal" }
+            ];
+
+            const mondaySchedule = [
+                { time: "07:15:00", label: "Upacara Bendera", sound: "flagCeremony" },
+                ...regularSchedule.slice(1) // Skip the first bell of regular schedule
+            ];
+
+            const fridaySchedule = [
+                { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
+                { time: "08:40:00", label: "Waktu Istirahat", sound: "startBreak" },
+                { time: "09:15:00", label: "Akhir Istirahat", sound: "endBreak" },
+                { time: "10:50:00", label: "Waktu Pulang Sekolah", sound: "dismissal" }
+            ];
+
+            // GANTI URL INI dengan URL repositori GitHub Anda
+            const GITHUB_AUDIO_BASE_URL = "https://NAMA_PENGGUNA.github.io/NAMA_REPOSITORI/audio/";
+
+            // Helper function to play audio with error handling
+            const playAudio = (url) => {
+                const audio = new Audio(url);
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Audio playback error:", error);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: `Gagal memutar audio. Pastikan URL benar.`,
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    });
+                }
+            };
+
+            const sounds = {
+                startPeriod: () => playAudio(`${GITHUB_AUDIO_BASE_URL}masuk_sekolah.mp3`),
+                changePeriod: () => playAudio(`${GITHUB_AUDIO_BASE_URL}ganti_jam.mp3`),
+                startBreak: () => playAudio(`${GITHUB_AUDIO_BASE_URL}istirahat.mp3`),
+                endBreak: () => playAudio(`${GITHUB_AUDIO_BASE_URL}ganti_jam.mp3`), // Asumsi menggunakan bel yang sama
+                dismissal: () => playAudio(`${GITHUB_AUDIO_BASE_URL}pulang.mp3`),
+                flagCeremony: () => playAudio(`${GITHUB_AUDIO_BASE_URL}upacara.mp3`)
+            };
+            
+            const soundLabels = {
+                flagCeremony: "Bel Upacara Bendera",
+                startPeriod: "Bel Masuk Pelajaran",
+                changePeriod: "Bel Ganti Pelajaran",
+                startBreak: "Bel Mulai Istirahat",
+                endBreak: "Bel Akhir Istirahat",
+                dismissal: "Bel Pulang Sekolah"
+            };
+
+            const clockDisplay = document.getElementById('clock-display');
+            const dateDisplay = document.getElementById('date-display');
+            const statusDisplay = document.getElementById('status-display');
+            const scheduleList = document.getElementById('schedule-list');
+            const scheduleTitle = document.getElementById('schedule-title');
+            const manualBellSelect = document.getElementById('manual-bell-select');
+            const playManualBtn = document.getElementById('play-manual-btn');
+            
+            let lastPlayedTime = null;
+
+            function getCurrentSchedule() {
+                const day = new Date().getDay(); // Sunday = 0, Monday = 1, ..., Friday = 5
+                if (day === 1) return mondaySchedule;
+                if (day === 5) return fridaySchedule;
+                return regularSchedule;
+            }
+
+            function formatIndonesianDate(date) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('id-ID', options);
+            }
+
+            function populateSchedule() {
+                const currentSchedule = getCurrentSchedule();
+                const dayName = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
+                scheduleTitle.innerHTML = `<i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Bel Hari ${dayName}`;
+                
+                scheduleList.innerHTML = '';
+                currentSchedule.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'schedule-item flex items-center justify-between p-4 rounded-xl border border-gray-200 transition-all duration-300';
+                    div.id = `schedule-${item.time.replace(/:/g, '')}`;
+                    div.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-indigo-500 text-xl mr-4"></i>
+                            <div>
+                                <p class="font-semibold text-lg">${item.time.substring(0, 5)}</p>
+                                <p class="text-gray-500">${item.label}</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-check-circle text-gray-300 text-2xl"></i>
+                    `;
+                    scheduleList.appendChild(div);
+                });
+            }
+
+            function populateManualControls() {
+                manualBellSelect.innerHTML = '';
+                for (const soundKey in soundLabels) {
+                    const option = document.createElement('option');
+                    option.value = soundKey;
+                    option.textContent = soundLabels[soundKey];
+                    manualBellSelect.appendChild(option);
+                }
+            }
+
+            function tick() {
+                const now = new Date();
+                const currentTimeString = now.toTimeString().split(' ')[0];
+
+                clockDisplay.textContent = currentTimeString;
+                dateDisplay.textContent = formatIndonesianDate(now);
+
+                const currentSchedule = getCurrentSchedule();
+                const scheduledItem = currentSchedule.find(item => item.time === currentTimeString);
+                if (scheduledItem && lastPlayedTime !== currentTimeString) {
+                    sounds[scheduledItem.sound]();
+                    lastPlayedTime = currentTimeString;
+                    statusDisplay.innerHTML = `<i class="fas fa-volume-up text-green-500 mr-2"></i> Terakhir dibunyikan: ${scheduledItem.label}`;
+                    statusDisplay.classList.add('bg-green-100');
+                    setTimeout(() => statusDisplay.classList.remove('bg-green-100'), 5000);
+                }
+                
+                updateScheduleHighlight(currentTimeString);
+            }
+            
+            function updateScheduleHighlight(currentTimeString) {
+                const currentSchedule = getCurrentSchedule();
+                let nextBellTime = null;
+
+                for (const item of currentSchedule) {
+                    if (item.time > currentTimeString) {
+                        nextBellTime = item.time;
+                        break;
+                    }
+                }
+                
+                if (!nextBellTime && currentSchedule.length > 0) {
+                    nextBellTime = currentSchedule[0].time;
+                }
+
+                if (!statusDisplay.innerHTML.includes('Terakhir dibunyikan')) {
+                     if (nextBellTime) {
+                         statusDisplay.innerHTML = `<i class="far fa-clock text-indigo-500 mr-2"></i> Bel berikutnya pkl ${nextBellTime.substring(0,5)}`;
+                     } else {
+                         statusDisplay.innerHTML = `Tidak ada jadwal bel.`;
+                     }
+                }
+
+                document.querySelectorAll('.schedule-item').forEach(el => {
+                    el.classList.remove('next', 'played');
+                    const timeId = el.id.split('-')[1];
+                    const time = `${timeId.substring(0,2)}:${timeId.substring(2,4)}:${timeId.substring(4,6)}`;
+                    
+                    const checkIcon = el.querySelector('.fa-check-circle');
+                    if (checkIcon) {
+                        if (time < currentTimeString) {
+                            el.classList.add('played');
+                            checkIcon.classList.remove('text-gray-300');
+                            checkIcon.classList.add('text-green-500');
+                        } else {
+                            checkIcon.classList.remove('text-green-500');
+                            checkIcon.classList.add('text-gray-300');
+                        }
+                    }
+
+                    if (time === nextBellTime) {
+                        el.classList.add('next');
+                    }
+                });
+            }
+
+            function playManualBell() {
+                const selectedSound = manualBellSelect.value;
+                if (selectedSound && sounds[selectedSound]) {
+                    sounds[selectedSound]();
+                    statusDisplay.innerHTML = `<i class="fas fa-volume-up text-blue-500 mr-2"></i> Bel manual: ${soundLabels[selectedSound]}`;
+                    statusDisplay.classList.add('bg-blue-100');
+                    setTimeout(() => statusDisplay.classList.remove('bg-blue-100'), 5000);
+                }
+            }
+
+            function init() {
+                populateSchedule();
+                populateManualControls();
+                
+                setInterval(() => {
+                    const currentDay = new Date().getDay();
+                    if (window.currentDay !== currentDay) {
+                        window.currentDay = currentDay;
+                        populateSchedule();
+                    }
+                    tick();
+                }, 1000);
+
+                window.currentDay = new Date().getDay();
+                playManualBtn.addEventListener('click', playManualBell);
+                tick();
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
