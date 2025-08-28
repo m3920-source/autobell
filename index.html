@@ -49,6 +49,13 @@
 </head>
 <body class="antialiased text-gray-800">
 
+    <!-- Tombol untuk mengaktifkan audio autoplay -->
+    <div id="audio-unlock" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+      <button id="enable-audio" class="btn-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg">
+        <i class="fas fa-volume-up mr-2"></i> Aktifkan Bel
+      </button>
+    </div>
+
     <div class="min-h-screen flex flex-col items-center justify-center p-4">
         
         <!-- Main Container -->
@@ -94,6 +101,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Unlock audio context untuk Chrome agar bel bisa otomatis
+            const unlockDiv = document.getElementById("audio-unlock");
+            const enableAudioBtn = document.getElementById("enable-audio");
+
+            enableAudioBtn.addEventListener("click", () => {
+                // Paksa sekali play untuk buka izin autoplay
+                const silentAudio = new Audio();
+                silentAudio.src = "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..."; // data URI kosong
+                silentAudio.play().catch(() => {});
+
+                if (Tone.context.state !== "running") {
+                    Tone.start();
+                }
+
+                // Sembunyikan tombol setelah diaktifkan
+                unlockDiv.style.display = "none";
+                console.log("Audio context unlocked! Bel otomatis aktif.");
+            });
+
             // =================================
             // KONFIGURASI JADWAL & SUARA
             // =================================
