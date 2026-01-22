@@ -38,7 +38,6 @@
             animation: moveClouds linear infinite;
         }
 
-        /* Cloud Shapes using pseudo-elements */
         .cloud::after, .cloud::before {
             content: '';
             position: absolute;
@@ -46,53 +45,14 @@
             border-radius: 50%;
         }
 
-        .cloud::after {
-            width: 50px;
-            height: 50px;
-            top: -25px;
-            left: 25px;
-        }
+        .cloud::after { width: 50px; height: 50px; top: -25px; left: 25px; }
+        .cloud::before { width: 70px; height: 70px; top: -35px; left: 50px; }
 
-        .cloud::before {
-            width: 70px;
-            height: 70px;
-            top: -35px;
-            left: 50px;
-        }
-
-        /* Individual Cloud Styling */
-        .cloud-1 {
-            width: 150px; height: 50px; top: 10%; left: -20%;
-            animation-duration: 45s;
-            animation-delay: 0s;
-            opacity: 0.9;
-        }
-        .cloud-2 {
-            width: 200px; height: 70px; top: 25%; left: -20%;
-            animation-duration: 60s;
-            animation-delay: -20s;
-            opacity: 0.7;
-            transform: scale(0.8);
-        }
-        .cloud-3 {
-            width: 120px; height: 40px; top: 60%; left: -20%;
-            animation-duration: 35s;
-            animation-delay: -5s;
-            opacity: 0.8;
-        }
-        .cloud-4 {
-            width: 180px; height: 60px; top: 40%; left: -20%;
-            animation-duration: 50s;
-            animation-delay: -35s;
-            opacity: 0.6;
-        }
-        .cloud-5 {
-            width: 250px; height: 80px; top: 80%; left: -20%;
-            animation-duration: 70s;
-            animation-delay: -10s;
-            opacity: 0.8;
-            transform: scale(1.2);
-        }
+        .cloud-1 { width: 150px; height: 50px; top: 10%; left: -20%; animation-duration: 45s; animation-delay: 0s; opacity: 0.9; }
+        .cloud-2 { width: 200px; height: 70px; top: 25%; left: -20%; animation-duration: 60s; animation-delay: -20s; opacity: 0.7; transform: scale(0.8); }
+        .cloud-3 { width: 120px; height: 40px; top: 60%; left: -20%; animation-duration: 35s; animation-delay: -5s; opacity: 0.8; }
+        .cloud-4 { width: 180px; height: 60px; top: 40%; left: -20%; animation-duration: 50s; animation-delay: -35s; opacity: 0.6; }
+        .cloud-5 { width: 250px; height: 80px; top: 80%; left: -20%; animation-duration: 70s; animation-delay: -10s; opacity: 0.8; transform: scale(1.2); }
 
         @keyframes moveClouds {
             0% { transform: translateX(-200px); }
@@ -119,6 +79,7 @@
         .clock-display {
             font-variant-numeric: tabular-nums;
             text-shadow: 2px 4px 6px rgba(0,0,0,0.1);
+            line-height: 1;
         }
 
         .schedule-item {
@@ -152,25 +113,14 @@
         }
 
         /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.05);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(79, 70, 229, 0.3);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(79, 70, 229, 0.5);
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(79, 70, 229, 0.5); }
     </style>
 </head>
 <body class="antialiased text-slate-800">
 
-    <!-- Latar Belakang Awan -->
     <div class="sky-background">
         <div class="cloud cloud-1"></div>
         <div class="cloud cloud-2"></div>
@@ -179,7 +129,6 @@
         <div class="cloud cloud-5"></div>
     </div>
 
-    <!-- Tombol untuk mengaktifkan audio autoplay -->
     <div id="audio-unlock" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
       <div class="glass-card p-8 text-center max-w-md mx-4 animate-bounce-in">
           <h2 class="text-2xl font-bold mb-4 text-indigo-700">Selamat Datang!</h2>
@@ -192,10 +141,8 @@
 
     <div class="min-h-screen flex flex-col p-4 md:p-8">
         
-        <!-- Main Container -->
         <div class="w-full max-w-7xl mx-auto flex-grow flex flex-col">
             
-            <!-- Header -->
             <header class="text-center mb-8 mt-4">
                 <div class="inline-block glass-card px-8 py-3 rounded-full mb-4">
                     <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo-700 flex items-center justify-center gap-3">
@@ -206,25 +153,26 @@
                 <p class="text-white font-medium text-lg drop-shadow-md bg-indigo-600/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm">Sistem Bel SD IT Nurul Kautsar</p>
             </header>
 
-            <!-- Main Content -->
             <main class="flex-grow flex flex-col justify-center">
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8 items-start">
+                <!-- GRID UPDATED: Menggunakan 5 kolom (3 untuk jam, 2 untuk jadwal) untuk memberi ruang lebih -->
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-8 mb-8 items-start">
                     
-                    <!-- Kiri: Jam & Status -->
-                    <div class="glass-card p-10 text-center flex flex-col justify-center items-center h-full min-h-[400px]">
+                    <!-- Kiri: Jam & Status (Lebih Lebar: col-span-3) -->
+                    <div class="xl:col-span-3 glass-card p-6 md:p-10 text-center flex flex-col justify-center items-center h-full min-h-[350px]">
                         <p id="date-display" class="text-xl md:text-2xl font-semibold text-indigo-500 mb-2 uppercase tracking-wide"></p>
                         
-                        <!-- JAM BESAR -->
-                        <div id="clock-display" class="clock-display text-8xl sm:text-9xl md:text-[9rem] lg:text-[10rem] font-bold text-slate-800 leading-none my-6 tracking-tight"></div>
+                        <!-- JAM DIPERBAIKI: Ukuran seragam, font responsif dimaksimalkan -->
+                        <div id="clock-display" class="clock-display font-bold text-slate-800 tracking-tight my-6 text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] xl:text-[8rem]">
+                            <!-- Waktu akan diisi oleh JS -->
+                        </div>
                         
                         <div id="status-display" class="mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100">
                             Memuat status...
                         </div>
                     </div>
 
-                    <!-- Kanan: Jadwal & Kontrol -->
-                    <div class="flex flex-col gap-8 h-full">
-                        <!-- Jadwal -->
+                    <!-- Kanan: Jadwal & Kontrol (Standar: col-span-2) -->
+                    <div class="xl:col-span-2 flex flex-col gap-8 h-full">
                         <div class="glass-card p-8 flex-grow">
                             <h2 id="schedule-title" class="text-2xl font-bold mb-6 flex items-center text-slate-700 border-b border-gray-200 pb-4">
                                 <i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>
@@ -233,7 +181,6 @@
                             <div id="schedule-list" class="space-y-3 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar"></div>
                         </div>
 
-                        <!-- Kontrol Manual -->
                         <div class="glass-card p-8">
                             <h2 class="text-xl font-bold mb-4 flex items-center text-slate-700">
                                 <i class="fas fa-sliders-h mr-3 text-indigo-500"></i>
@@ -255,7 +202,6 @@
                 </div>
             </main>
 
-             <!-- Footer -->
             <footer class="text-center mt-auto py-6">
                 <p class="text-indigo-800/60 font-medium text-sm bg-white/30 inline-block px-6 py-2 rounded-full backdrop-blur-sm">© 2026 Auto Bell - SD IT Nurul Kautsar.</p>
             </footer>
@@ -265,7 +211,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Unlock audio context
             const unlockDiv = document.getElementById("audio-unlock");
             const enableAudioBtn = document.getElementById("enable-audio");
 
@@ -287,15 +232,10 @@
             });
 
             function playSuccessTone() {
-                // Bunyi 'ding' kecil saat sistem aktif
                 const synth = new Tone.Synth().toDestination();
                 synth.triggerAttackRelease("C5", "8n");
             }
 
-            // =================================
-            // KONFIGURASI JADWAL & SUARA
-            // =================================
-            
             const regularSchedule = [
                 { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
                 { time: "09:15:00", label: "Pergantian Jam Pelajaran", sound: "changePeriod" },
@@ -423,17 +363,19 @@
 
             function tick() {
                 const now = new Date();
-                const currentTimeString = now.toTimeString().split(' ')[0];
-
-                clockDisplay.textContent = currentTimeString;
+                const timeString = now.toTimeString().split(' ')[0]; // HH:MM:SS
+                
+                // PERBAIKAN: Menampilkan HH:MM:SS dalam satu ukuran yang sama
+                clockDisplay.textContent = timeString;
+                
                 dateDisplay.textContent = formatIndonesianDate(now);
 
                 const currentSchedule = getCurrentSchedule();
-                const scheduledItem = currentSchedule.find(item => item.time === currentTimeString);
+                const scheduledItem = currentSchedule.find(item => item.time === timeString);
                 
-                if (scheduledItem && lastPlayedTime !== currentTimeString) {
+                if (scheduledItem && lastPlayedTime !== timeString) {
                     sounds[scheduledItem.sound]();
-                    lastPlayedTime = currentTimeString;
+                    lastPlayedTime = timeString;
                     statusDisplay.innerHTML = `<span class="flex items-center animate-pulse"><i class="fas fa-volume-up text-green-500 mr-2"></i> Membunyikan: ${scheduledItem.label}</span>`;
                     statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-green-100 rounded-2xl px-6 py-4 text-green-700 font-bold text-lg shadow-inner transition-all duration-300 border border-green-200 transform scale-105";
                     
@@ -442,7 +384,7 @@
                     }, 5000);
                 }
                 
-                updateScheduleHighlight(currentTimeString);
+                updateScheduleHighlight(timeString);
             }
             
             function updateScheduleHighlight(currentTimeString) {
@@ -457,7 +399,6 @@
                 }
                 
                 if (!nextBellTime && currentSchedule.length > 0) {
-                    // Cek jika belum ada jadwal yang lewat, mungkin bel pertama adalah next
                      const firstBell = currentSchedule[0].time;
                      if(firstBell > currentTimeString) nextBellTime = firstBell;
                 }
@@ -465,9 +406,7 @@
                 if (!statusDisplay.innerHTML.includes('Membunyikan') && !statusDisplay.innerHTML.includes('Bel manual')) {
                      if (nextBellTime) {
                          const timeParts = nextBellTime.split(':');
-                         const hour = timeParts[0];
-                         const minute = timeParts[1];
-                         statusDisplay.innerHTML = `<span class="flex items-center"><i class="far fa-clock text-indigo-500 mr-2"></i> Berikutnya: ${hour}:${minute}</span>`;
+                         statusDisplay.innerHTML = `<span class="flex items-center"><i class="far fa-clock text-indigo-500 mr-2"></i> Berikutnya: ${timeParts[0]}:${timeParts[1]}</span>`;
                      } else {
                          statusDisplay.innerHTML = `<span class="text-gray-400">Semua jadwal selesai hari ini.</span>`;
                      }
