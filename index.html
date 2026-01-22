@@ -8,92 +8,256 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f0f4f8;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+
+        /* --- BACKGROUND & CLOUDS ANIMATION --- */
+        .sky-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 100%);
+            z-index: -10;
+            overflow: hidden;
         }
-        .card {
-            background-color: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 100px;
+            opacity: 0.8;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            animation: moveClouds linear infinite;
+        }
+
+        /* Cloud Shapes using pseudo-elements */
+        .cloud::after, .cloud::before {
+            content: '';
+            position: absolute;
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        .cloud::after {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 25px;
+        }
+
+        .cloud::before {
+            width: 70px;
+            height: 70px;
+            top: -35px;
+            left: 50px;
+        }
+
+        /* Individual Cloud Styling */
+        .cloud-1 {
+            width: 150px; height: 50px; top: 10%; left: -20%;
+            animation-duration: 45s;
+            animation-delay: 0s;
+            opacity: 0.9;
+        }
+        .cloud-2 {
+            width: 200px; height: 70px; top: 25%; left: -20%;
+            animation-duration: 60s;
+            animation-delay: -20s;
+            opacity: 0.7;
+            transform: scale(0.8);
+        }
+        .cloud-3 {
+            width: 120px; height: 40px; top: 60%; left: -20%;
+            animation-duration: 35s;
+            animation-delay: -5s;
+            opacity: 0.8;
+        }
+        .cloud-4 {
+            width: 180px; height: 60px; top: 40%; left: -20%;
+            animation-duration: 50s;
+            animation-delay: -35s;
+            opacity: 0.6;
+        }
+        .cloud-5 {
+            width: 250px; height: 80px; top: 80%; left: -20%;
+            animation-duration: 70s;
+            animation-delay: -10s;
+            opacity: 0.8;
+            transform: scale(1.2);
+        }
+
+        @keyframes moveClouds {
+            0% { transform: translateX(-200px); }
+            100% { transform: translateX(120vw); }
+        }
+
+        /* --- GLASSMORPHISM UI --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .card:hover {
+
+        .glass-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.2);
+            background: rgba(255, 255, 255, 0.95);
         }
+
         .clock-display {
             font-variant-numeric: tabular-nums;
+            text-shadow: 2px 4px 6px rgba(0,0,0,0.1);
         }
+
+        .schedule-item {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         .schedule-item.played {
-            opacity: 0.5;
-            background-color: #f8fafc;
+            opacity: 0.6;
+            background-color: rgba(241, 245, 249, 0.8);
+            filter: grayscale(0.8);
         }
+
         .schedule-item.next {
-            background-color: #e0e7ff;
-            border-left: 4px solid #4f46e5;
+            background: rgba(224, 231, 255, 0.9);
+            border-left: 6px solid #4f46e5;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transform: scale(1.02);
         }
+
         .btn-primary {
-            background-color: #4f46e5;
-            transition: background-color 0.3s ease;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
         }
+
         .btn-primary:hover {
-            background-color: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+            background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.5);
         }
     </style>
 </head>
-<body class="antialiased text-gray-800">
+<body class="antialiased text-slate-800">
 
-    <!-- Tombol untuk mengaktifkan audio autoplay -->
-    <div id="audio-unlock" class="fixed inset-0 flex items-center justify-center bg-white z-50">
-      <button id="enable-audio" class="btn-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg">
-        <i class="fas fa-volume-up mr-2"></i> Aktifkan Bel
-      </button>
+    <!-- Latar Belakang Awan -->
+    <div class="sky-background">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        <div class="cloud cloud-4"></div>
+        <div class="cloud cloud-5"></div>
     </div>
 
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Tombol untuk mengaktifkan audio autoplay -->
+    <div id="audio-unlock" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+      <div class="glass-card p-8 text-center max-w-md mx-4 animate-bounce-in">
+          <h2 class="text-2xl font-bold mb-4 text-indigo-700">Selamat Datang!</h2>
+          <p class="mb-6 text-gray-600">Klik tombol di bawah ini untuk mengaktifkan suara bel otomatis.</p>
+          <button id="enable-audio" class="btn-primary text-white font-bold py-4 px-8 rounded-2xl text-lg w-full">
+            <i class="fas fa-volume-up mr-2"></i> Aktifkan Sistem Bel
+          </button>
+      </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col p-4 md:p-8">
         
         <!-- Main Container -->
-        <div class="w-full max-w-6xl mx-auto">
+        <div class="w-full max-w-7xl mx-auto flex-grow flex flex-col">
             
             <!-- Header -->
-            <header class="text-center mb-8">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800">
-                    <i class="fas fa-bell text-indigo-600"></i> Auto <span class="text-indigo-600">Bell</span>
-                </h1>
-                <p class="text-gray-500 mt-2">Sistem Bel SD IT Nurul Kautsar</p>
+            <header class="text-center mb-8 mt-4">
+                <div class="inline-block glass-card px-8 py-3 rounded-full mb-4">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-indigo-700 flex items-center justify-center gap-3">
+                        <i class="fas fa-bell text-yellow-400 drop-shadow-md"></i> 
+                        Auto Bell
+                    </h1>
+                </div>
+                <p class="text-white font-medium text-lg drop-shadow-md bg-indigo-600/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm">Sistem Bel SD IT Nurul Kautsar</p>
             </header>
 
             <!-- Main Content -->
-            <main>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div class="card p-8 text-center flex flex-col justify-center">
-                        <p id="date-display" class="text-lg font-medium text-gray-500 mb-2"></p>
-                        <div id="clock-display" class="clock-display text-5xl sm:text-6xl md:text-7xl font-bold text-indigo-600 tracking-wider"></div>
-                        <div id="status-display" class="mt-4 h-10 flex items-center justify-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-medium transition-all duration-300"></div>
+            <main class="flex-grow flex flex-col justify-center">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8 items-start">
+                    
+                    <!-- Kiri: Jam & Status -->
+                    <div class="glass-card p-10 text-center flex flex-col justify-center items-center h-full min-h-[400px]">
+                        <p id="date-display" class="text-xl md:text-2xl font-semibold text-indigo-500 mb-2 uppercase tracking-wide"></p>
+                        
+                        <!-- JAM BESAR -->
+                        <div id="clock-display" class="clock-display text-8xl sm:text-9xl md:text-[9rem] lg:text-[10rem] font-bold text-slate-800 leading-none my-6 tracking-tight"></div>
+                        
+                        <div id="status-display" class="mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100">
+                            Memuat status...
+                        </div>
                     </div>
-                    <div class="card p-8 flex flex-col justify-center">
-                        <h2 class="text-2xl font-bold mb-4 flex items-center"><i class="fas fa-hand-point-up mr-3 text-indigo-500"></i>Kontrol Manual</h2>
-                        <select id="manual-bell-select" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></select>
-                        <button id="play-manual-btn" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-play mr-2"></i> Bunyikan Sekarang
-                        </button>
+
+                    <!-- Kanan: Jadwal & Kontrol -->
+                    <div class="flex flex-col gap-8 h-full">
+                        <!-- Jadwal -->
+                        <div class="glass-card p-8 flex-grow">
+                            <h2 id="schedule-title" class="text-2xl font-bold mb-6 flex items-center text-slate-700 border-b border-gray-200 pb-4">
+                                <i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>
+                                Jadwal Bel Hari Ini
+                            </h2>
+                            <div id="schedule-list" class="space-y-3 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar"></div>
+                        </div>
+
+                        <!-- Kontrol Manual -->
+                        <div class="glass-card p-8">
+                            <h2 class="text-xl font-bold mb-4 flex items-center text-slate-700">
+                                <i class="fas fa-sliders-h mr-3 text-indigo-500"></i>
+                                Kontrol Manual
+                            </h2>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="relative flex-grow">
+                                    <select id="manual-bell-select" class="w-full p-4 pl-4 pr-10 appearance-none bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none text-gray-700 font-medium cursor-pointer hover:bg-white"></select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <button id="play-manual-btn" class="btn-primary text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+                                    <i class="fas fa-play mr-2"></i> Bunyikan
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="card p-8">
-                    <h2 id="schedule-title" class="text-2xl font-bold mb-6 flex items-center"><i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Bel Hari Ini</h2>
-                    <div id="schedule-list" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2"></div>
                 </div>
             </main>
 
              <!-- Footer -->
-            <footer class="text-center mt-12 text-gray-500">
-                <p>Auto Bell - SD IT Nurul Kautsar.</p>
+            <footer class="text-center mt-auto py-6">
+                <p class="text-indigo-800/60 font-medium text-sm bg-white/30 inline-block px-6 py-2 rounded-full backdrop-blur-sm">© 2026 Auto Bell - SD IT Nurul Kautsar.</p>
             </footer>
 
         </div>
@@ -101,24 +265,32 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Unlock audio context untuk Chrome agar bel bisa otomatis
+            // Unlock audio context
             const unlockDiv = document.getElementById("audio-unlock");
             const enableAudioBtn = document.getElementById("enable-audio");
 
             enableAudioBtn.addEventListener("click", () => {
-                // Paksa sekali play untuk buka izin autoplay
                 const silentAudio = new Audio();
-                silentAudio.src = "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..."; // data URI kosong
+                silentAudio.src = "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..."; 
                 silentAudio.play().catch(() => {});
 
                 if (Tone.context.state !== "running") {
                     Tone.start();
                 }
 
-                // Sembunyikan tombol setelah diaktifkan
-                unlockDiv.style.display = "none";
-                console.log("Audio context unlocked! Bel otomatis aktif.");
+                unlockDiv.style.opacity = '0';
+                setTimeout(() => {
+                    unlockDiv.style.display = "none";
+                }, 500);
+                
+                playSuccessTone();
             });
+
+            function playSuccessTone() {
+                // Bunyi 'ding' kecil saat sistem aktif
+                const synth = new Tone.Synth().toDestination();
+                synth.triggerAttackRelease("C5", "8n");
+            }
 
             // =================================
             // KONFIGURASI JADWAL & SUARA
@@ -134,20 +306,14 @@
 
             const mondaySchedule = [
                 { time: "07:15:00", label: "Upacara Bendera", sound: "flagCeremony" },
-                ...regularSchedule.slice(1) // Skip the first bell of regular schedule
+                ...regularSchedule.slice(1)
             ];
 
             const fridaySchedule = [
                 { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
-                { time: "08:40:00", label: "Waktu Istirahat", sound: "startBreak" },
-                { time: "08:55:00", label: "Akhir Istirahat", sound: "endBreak" },
                 { time: "10:25:00", label: "Waktu Pulang Sekolah", sound: "dismissal" }
             ];
 
-            // GANTI URL INI dengan URL repositori GitHub Anda
-            const GITHUB_AUDIO_BASE_URL = "https://m3920-source.github.io/autobell/audio/";
-
-            // Helper function to play audio with error handling
             const playAudio = (url) => {
                 const audio = new Audio(url);
                 const playPromise = audio.play();
@@ -158,9 +324,12 @@
                             toast: true,
                             position: 'top-end',
                             icon: 'error',
-                            title: `Gagal memutar audio. Pastikan URL benar.`,
+                            title: `Gagal memutar audio.`,
+                            text: 'Pastikan file audio tersedia.',
                             showConfirmButton: false,
-                            timer: 3000
+                            timer: 3000,
+                            background: '#fee2e2',
+                            color: '#991b1b'
                         });
                     });
                 }
@@ -197,7 +366,7 @@
             let lastPlayedTime = null;
 
             function getCurrentSchedule() {
-                const day = new Date().getDay(); // Sunday = 0, Monday = 1, ..., Friday = 5
+                const day = new Date().getDay();
                 if (day === 1) return mondaySchedule;
                 if (day === 5) return fridaySchedule;
                 return regularSchedule;
@@ -211,22 +380,32 @@
             function populateSchedule() {
                 const currentSchedule = getCurrentSchedule();
                 const dayName = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
-                scheduleTitle.innerHTML = `<i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Bel Hari ${dayName}`;
+                scheduleTitle.innerHTML = `<i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Hari ${dayName}`;
                 
                 scheduleList.innerHTML = '';
+                
+                if(currentSchedule.length === 0) {
+                     scheduleList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada jadwal bel hari ini.</p>';
+                     return;
+                }
+
                 currentSchedule.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'schedule-item flex items-center justify-between p-4 rounded-xl border border-gray-200 transition-all duration-300';
+                    div.className = 'schedule-item flex items-center justify-between p-4 rounded-xl transition-all duration-300 mb-2';
                     div.id = `schedule-${item.time.replace(/:/g, '')}`;
                     div.innerHTML = `
                         <div class="flex items-center">
-                            <i class="fas fa-clock text-indigo-500 text-xl mr-4"></i>
+                            <div class="bg-indigo-100 p-2 rounded-lg mr-4 text-indigo-600">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
                             <div>
-                                <p class="font-semibold text-lg">${item.time.substring(0, 5)}</p>
-                                <p class="text-gray-500">${item.label}</p>
+                                <p class="font-bold text-lg text-slate-700">${item.time.substring(0, 5)}</p>
+                                <p class="text-sm text-slate-500 font-medium">${item.label}</p>
                             </div>
                         </div>
-                        <i class="fas fa-check-circle text-gray-300 text-2xl"></i>
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle text-gray-300 text-xl transition-colors duration-300"></i>
+                        </div>
                     `;
                     scheduleList.appendChild(div);
                 });
@@ -251,12 +430,16 @@
 
                 const currentSchedule = getCurrentSchedule();
                 const scheduledItem = currentSchedule.find(item => item.time === currentTimeString);
+                
                 if (scheduledItem && lastPlayedTime !== currentTimeString) {
                     sounds[scheduledItem.sound]();
                     lastPlayedTime = currentTimeString;
-                    statusDisplay.innerHTML = `<i class="fas fa-volume-up text-green-500 mr-2"></i> Terakhir dibunyikan: ${scheduledItem.label}`;
-                    statusDisplay.classList.add('bg-green-100');
-                    setTimeout(() => statusDisplay.classList.remove('bg-green-100'), 5000);
+                    statusDisplay.innerHTML = `<span class="flex items-center animate-pulse"><i class="fas fa-volume-up text-green-500 mr-2"></i> Membunyikan: ${scheduledItem.label}</span>`;
+                    statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-green-100 rounded-2xl px-6 py-4 text-green-700 font-bold text-lg shadow-inner transition-all duration-300 border border-green-200 transform scale-105";
+                    
+                    setTimeout(() => {
+                        statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100";
+                    }, 5000);
                 }
                 
                 updateScheduleHighlight(currentTimeString);
@@ -274,14 +457,19 @@
                 }
                 
                 if (!nextBellTime && currentSchedule.length > 0) {
-                    nextBellTime = currentSchedule[0].time;
+                    // Cek jika belum ada jadwal yang lewat, mungkin bel pertama adalah next
+                     const firstBell = currentSchedule[0].time;
+                     if(firstBell > currentTimeString) nextBellTime = firstBell;
                 }
 
-                if (!statusDisplay.innerHTML.includes('Terakhir dibunyikan')) {
+                if (!statusDisplay.innerHTML.includes('Membunyikan') && !statusDisplay.innerHTML.includes('Bel manual')) {
                      if (nextBellTime) {
-                         statusDisplay.innerHTML = `<i class="far fa-clock text-indigo-500 mr-2"></i> Bel berikutnya pkl ${nextBellTime.substring(0,5)}`;
+                         const timeParts = nextBellTime.split(':');
+                         const hour = timeParts[0];
+                         const minute = timeParts[1];
+                         statusDisplay.innerHTML = `<span class="flex items-center"><i class="far fa-clock text-indigo-500 mr-2"></i> Berikutnya: ${hour}:${minute}</span>`;
                      } else {
-                         statusDisplay.innerHTML = `Tidak ada jadwal bel.`;
+                         statusDisplay.innerHTML = `<span class="text-gray-400">Semua jadwal selesai hari ini.</span>`;
                      }
                 }
 
@@ -291,19 +479,24 @@
                     const time = `${timeId.substring(0,2)}:${timeId.substring(2,4)}:${timeId.substring(4,6)}`;
                     
                     const checkIcon = el.querySelector('.fa-check-circle');
-                    if (checkIcon) {
-                        if (time < currentTimeString) {
-                            el.classList.add('played');
+                    
+                    if (time < currentTimeString) {
+                        el.classList.add('played');
+                        if(checkIcon) {
                             checkIcon.classList.remove('text-gray-300');
                             checkIcon.classList.add('text-green-500');
-                        } else {
+                        }
+                    } else if (time === nextBellTime) {
+                        el.classList.add('next');
+                         if(checkIcon) {
                             checkIcon.classList.remove('text-green-500');
+                            checkIcon.classList.add('text-indigo-500');
+                        }
+                    } else {
+                        if(checkIcon) {
+                            checkIcon.classList.remove('text-green-500', 'text-indigo-500');
                             checkIcon.classList.add('text-gray-300');
                         }
-                    }
-
-                    if (time === nextBellTime) {
-                        el.classList.add('next');
                     }
                 });
             }
@@ -312,9 +505,12 @@
                 const selectedSound = manualBellSelect.value;
                 if (selectedSound && sounds[selectedSound]) {
                     sounds[selectedSound]();
-                    statusDisplay.innerHTML = `<i class="fas fa-volume-up text-blue-500 mr-2"></i> Bel manual: ${soundLabels[selectedSound]}`;
-                    statusDisplay.classList.add('bg-blue-100');
-                    setTimeout(() => statusDisplay.classList.remove('bg-blue-100'), 5000);
+                    statusDisplay.innerHTML = `<span class="flex items-center"><i class="fas fa-volume-up text-blue-500 mr-2"></i> Manual: ${soundLabels[selectedSound]}</span>`;
+                    statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-blue-100 rounded-2xl px-6 py-4 text-blue-700 font-bold text-lg shadow-inner transition-all duration-300 border border-blue-200 transform scale-105";
+                    
+                    setTimeout(() => {
+                        statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100";
+                    }, 5000);
                 }
             }
 
