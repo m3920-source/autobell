@@ -254,35 +254,125 @@
                 { time: "10:25:00", label: "Waktu Pulang Sekolah", sound: "dismissal" }
             ];
 
-            const playAudio = (url) => {
-                const audio = new Audio(url);
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error("Audio playback error:", error);
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: `Gagal memutar audio.`,
-                            text: 'Pastikan file audio tersedia.',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            background: '#fee2e2',
-                            color: '#991b1b'
+            // --- INDEXEDDB SETUP UNTUK OFFLINE AUDIO ---
+            const dbName = "AutoBellDB";
+            const storeName = "audioFiles";
+            let db;
+
+            async function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(dbName, 1);
+                    request.onupgradeneeded = (event) => {
+                        db = event.target.result;
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName);
+                        }
+                    };
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+            async function saveAudioToDB(key, blob) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], "readwrite");
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(blob, key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async function getAudioFromDB(key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], "readonly");
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async function fetchAndCacheAudio(url, key) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const blob = await response.blob();
+                    await saveAudioToDB(key, blob);
+                    return blob;
+                } catch (error) {
+                    console.warn("Gagal mendownload audio, mungkin sedang offline:", error);
+                    return null;
+                }
+            }
+
+            const soundsUrls = {
+                startPeriod: `https://m3920-source.github.io/autobell/audio/masuk.mp3`,
+                changePeriod: `https://m3920-source.github.io/autobell/audio/ganti_pelajaran.mp3`,
+                startBreak: `https://m3920-source.github.io/autobell/audio/istirahat.mp3`,
+                endBreak: `https://m3920-source.github.io/autobell/audio/masuk.mp3`,
+                dismissal: `https://m3920-source.github.io/autobell/audio/pulang.mp3`,
+                flagCeremony: `https://m3920-source.github.io/autobell/audio/apelpagi.mp3`,
+                bangunTidur: `https://m3920-source.github.io/autobell/audio/bangun.mp3`
+            };
+
+            async function preloadAudioFiles() {
+                try {
+                    if(!db) await initDB();
+                    for (const [key, url] of Object.entries(soundsUrls)) {
+                        const blob = await getAudioFromDB(key);
+                        if (!blob) {
+                            console.log(`Caching ${key} ke IndexedDB...`);
+                            await fetchAndCacheAudio(url, key);
+                        }
+                    }
+                    console.log("Semua audio telah tersimpan di IndexedDB (Siap Offline).");
+                } catch (e) {
+                    console.error("Gagal melakukan preload audio:", e);
+                }
+            }
+
+            const playAudio = async (soundKey) => {
+                const url = soundsUrls[soundKey];
+                try {
+                    if(!db) await initDB();
+                    let blob = await getAudioFromDB(soundKey);
+                    
+                    if (!blob) {
+                        // Jika offline saat ini, fetchAndCacheAudio akan gagal dan mengembalikan null
+                        blob = await fetchAndCacheAudio(url, soundKey);
+                    }
+
+                    let audioUrl = url;
+                    if (blob) {
+                        // Membuat URL lokal dari file Blob yang tersimpan
+                        audioUrl = URL.createObjectURL(blob);
+                    }
+
+                    const audio = new Audio(audioUrl);
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error("Audio playback error:", error);
                         });
-                    });
+                    }
+                } catch (err) {
+                    console.error("Error IndexedDB:", err);
+                    new Audio(url).play().catch(e => console.error(e)); // Fallback jaringan jika DB error
                 }
             };
 
             const sounds = {
-                startPeriod: () => playAudio(`https://m3920-source.github.io/autobell/audio/masuk.mp3`),
-                changePeriod: () => playAudio(`https://m3920-source.github.io/autobell/audio/ganti_pelajaran.mp3`),
-                startBreak: () => playAudio(`https://m3920-source.github.io/autobell/audio/istirahat.mp3`),
-                endBreak: () => playAudio(`https://m3920-source.github.io/autobell/audio/masuk.mp3`),
-                dismissal: () => playAudio(`https://m3920-source.github.io/autobell/audio/pulang.mp3`),
-                flagCeremony: () => playAudio(`https://m3920-source.github.io/autobell/audio/apelpagi.mp3`),
-                bangunTidur: () => playAudio(`https://m3920-source.github.io/autobell/audio/bangun.mp3`)
+                startPeriod: () => playAudio('startPeriod'),
+                changePeriod: () => playAudio('changePeriod'),
+                startBreak: () => playAudio('startBreak'),
+                endBreak: () => playAudio('endBreak'),
+                dismissal: () => playAudio('dismissal'),
+                flagCeremony: () => playAudio('flagCeremony'),
+                bangunTidur: () => playAudio('bangunTidur')
             };
             
             const soundLabels = {
@@ -304,6 +394,7 @@
             const playManualBtn = document.getElementById('play-manual-btn');
             
             let lastPlayedTime = null;
+            let lastScrolledId = null;
 
             function getCurrentSchedule() {
                 const day = new Date().getDay();
@@ -431,6 +522,12 @@
                             checkIcon.classList.remove('text-green-500');
                             checkIcon.classList.add('text-indigo-500');
                         }
+                        
+                        // Auto Scroll: arahkan item jadwal ini ke tengah daftar dengan mulus
+                        if (lastScrolledId !== el.id) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            lastScrolledId = el.id;
+                        }
                     } else {
                         if(checkIcon) {
                             checkIcon.classList.remove('text-green-500', 'text-indigo-500');
@@ -454,6 +551,7 @@
             }
 
             function init() {
+                preloadAudioFiles(); // Cache semua file audio di latar belakang
                 populateSchedule();
                 populateManualControls();
                 
