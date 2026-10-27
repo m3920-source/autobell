@@ -747,14 +747,12 @@
 
                 dateDisplay.textContent = formatIndonesianDate(now);
 
-                // Window 5 detik: bel tetap terbunyi walaupun tick terlewat sesaat (tab throttled)
+                // Window grace 90 detik: tick bisa terlewat saat tab di-throttle browser
+                // (tab background jalan ~1x/menit), jadi bel yang jatuh <90 detik lalu masih dibunyikan.
                 const nowSeconds = PrayerUtils.parseTimeToSeconds(timeString);
-                const scheduledItem = todaySchedule.find(item => {
-                    const itemSeconds = PrayerUtils.parseTimeToSeconds(item.time);
-                    return itemSeconds !== null && nowSeconds >= itemSeconds && nowSeconds < itemSeconds + 5;
-                });
+                const dueItems = PrayerUtils.findDueItems(todaySchedule, nowSeconds, 90);
 
-                if (scheduledItem) {
+                for (const scheduledItem of dueItems) {
                     const firedKey = PrayerUtils.buildFiredKey(AutoBellSync.todayStr(now), scheduledItem.time, scheduledItem.sound);
                     if (!AutoBellSync.firedHas(firedKey)) {
                         AutoBellSync.firedAdd(firedKey);
@@ -873,6 +871,14 @@
                 playManualBtn.addEventListener('click', playManualBell);
                 setupSettingsModal();
                 tick();
+
+                // Catch-up: saat tab dibuka kembali dari throttling/freeze (Edge sleeping tab,
+                // tab tersembunyi, layar terkunci), timer boleh telat — bel yang jatuh di window
+                // grace 90 detik tetap dibunyikan segera.
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) tick();
+                });
+                window.addEventListener('focus', tick);
             }
 
             // ================= SETTINGS MODAL LOGIC =================
