@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Bell - Bel Sekolah Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- BACKGROUND & CLOUDS ANIMATION --- */
+        .sky-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 100%);
+            z-index: -10;
+            overflow: hidden;
+        }
+
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 100px;
+            opacity: 0.8;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            animation: moveClouds linear infinite;
+        }
+
+        .cloud::after, .cloud::before {
+            content: '';
+            position: absolute;
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        .cloud::after { width: 50px; height: 50px; top: -25px; left: 25px; }
+        .cloud::before { width: 70px; height: 70px; top: -35px; left: 50px; }
+
+        .cloud-1 { width: 150px; height: 50px; top: 10%; left: -20%; animation-duration: 45s; animation-delay: 0s; opacity: 0.9; }
+        .cloud-2 { width: 200px; height: 70px; top: 25%; left: -20%; animation-duration: 60s; animation-delay: -20s; opacity: 0.7; transform: scale(0.8); }
+        .cloud-3 { width: 120px; height: 40px; top: 60%; left: -20%; animation-duration: 35s; animation-delay: -5s; opacity: 0.8; }
+        .cloud-4 { width: 180px; height: 60px; top: 40%; left: -20%; animation-duration: 50s; animation-delay: -35s; opacity: 0.6; }
+        .cloud-5 { width: 250px; height: 80px; top: 80%; left: -20%; animation-duration: 70s; animation-delay: -10s; opacity: 0.8; transform: scale(1.2); }
+
+        @keyframes moveClouds {
+            0% { transform: translateX(-200px); }
+            100% { transform: translateX(120vw); }
+        }
+
+        /* --- GLASSMORPHISM UI --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .clock-display {
+            font-variant-numeric: tabular-nums;
+            text-shadow: 2px 4px 6px rgba(0,0,0,0.1);
+            line-height: 1;
+        }
+
+        .schedule-item {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .schedule-item.played {
+            opacity: 0.6;
+            background-color: rgba(241, 245, 249, 0.8);
+            filter: grayscale(0.8);
+        }
+
+        .schedule-item.next {
+            background: rgba(224, 231, 255, 0.9);
+            border-left: 6px solid #4f46e5;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transform: scale(1.02);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+            background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(79, 70, 229, 0.5); }
+
+        /* Settings modal tabs */
+        .settings-tab {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: #64748b;
+        }
+        .settings-tab:hover { background: rgba(255, 255, 255, 0.9); color: #4f46e5; }
+        .settings-tab.active {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+        }
+        #settings-modal .glass-card:hover { transform: none; }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+
+    <div class="sky-background">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        <div class="cloud cloud-4"></div>
+        <div class="cloud cloud-5"></div>
+    </div>
+
+    <div id="audio-unlock" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+      <div class="glass-card p-8 text-center max-w-md mx-4 animate-bounce-in">
+          <h2 class="text-2xl font-bold mb-4 text-indigo-700">Selamat Datang!</h2>
+          <p class="mb-6 text-gray-600">Klik tombol di bawah ini untuk mengaktifkan suara bel otomatis.</p>
+          <button id="enable-audio" class="btn-primary text-white font-bold py-4 px-8 rounded-2xl text-lg w-full">
+            <i class="fas fa-volume-up mr-2"></i> Aktifkan Sistem Bel
+          </button>
+      </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col p-4 md:p-8">
+
+        <div class="w-full max-w-7xl mx-auto flex-grow flex flex-col">
+
+            <header class="text-center mb-8 mt-4">
+                <div class="inline-block glass-card px-12 py-6 rounded-[2.5rem] mb-4 shadow-xl relative">
+                    <button id="open-settings" type="button" aria-label="Buka pengaturan"
+                        class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/70 border border-white text-indigo-500 hover:text-indigo-700 hover:bg-white hover:rotate-90 transition-all duration-300 shadow-md flex items-center justify-center">
+                        <i class="fas fa-gear text-lg"></i>
+                    </button>
+                    <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-indigo-700 flex items-center justify-center gap-3 mb-2">
+                        <i class="fas fa-bell text-yellow-400 drop-shadow-md text-4xl"></i>
+                        Auto Bell
+                    </h1>
+                    <p class="text-indigo-500 font-semibold text-lg tracking-wide border-t border-indigo-100 pt-2 mt-2">Sistem Bel SD IT Nurul Kautsar</p>
+                </div>
+            </header>
+
+            <main class="flex-grow flex flex-col justify-center">
+                <!-- GRID UPDATED: Menggunakan 5 kolom (3 untuk jam, 2 untuk jadwal) untuk memberi ruang lebih -->
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-8 mb-8 items-start">
+
+                    <!-- Kiri: Jam & Status (Lebih Lebar: col-span-3) -->
+                    <div class="xl:col-span-3 glass-card p-6 md:p-10 text-center flex flex-col justify-center items-center h-full min-h-[350px]">
+                        <p id="date-display" class="text-xl md:text-2xl font-semibold text-indigo-500 mb-2 uppercase tracking-wide"></p>
+
+                        <!-- JAM DIPERBAIKI: Ukuran seragam, font responsif dimaksimalkan -->
+                        <div id="clock-display" class="clock-display font-bold text-slate-800 tracking-tight my-6 text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] xl:text-[8rem]">
+                            <!-- Waktu akan diisi oleh JS -->
+                        </div>
+
+                        <div id="status-display" class="mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100">
+                            Memuat status...
+                        </div>
+                    </div>
+
+                    <!-- Kanan: Jadwal & Kontrol (Standar: col-span-2) -->
+                    <div class="xl:col-span-2 flex flex-col gap-8 h-full">
+                        <div class="glass-card p-8 flex-grow">
+                            <h2 id="schedule-title" class="text-2xl font-bold mb-6 flex items-center text-slate-700 border-b border-gray-200 pb-4">
+                                <i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>
+                                Jadwal Bel Hari Ini
+                            </h2>
+                            <div id="schedule-list" class="space-y-3 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar"></div>
+                        </div>
+
+                        <div class="glass-card p-8">
+                            <h2 class="text-xl font-bold mb-4 flex items-center text-slate-700">
+                                <i class="fas fa-sliders-h mr-3 text-indigo-500"></i>
+                                Kontrol Manual
+                            </h2>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="relative flex-grow">
+                                    <select id="manual-bell-select" class="w-full p-4 pl-4 pr-10 appearance-none bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none text-gray-700 font-medium cursor-pointer hover:bg-white"></select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <button id="play-manual-btn" class="btn-primary text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+                                    <i class="fas fa-play mr-2"></i> Bunyikan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="text-center mt-auto py-6">
+                <p class="text-indigo-800/60 font-medium text-sm bg-white/30 inline-block px-6 py-2 rounded-full backdrop-blur-sm">© 2026 Auto Bell - SD IT Nurul Kautsar.</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- ================= MODAL PENGATURAN (4 TAB) ================= -->
+    <div id="settings-modal" class="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="glass-card w-full max-w-2xl mx-auto my-8 p-6 md:p-8" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="flex items-center justify-between mb-6 border-b border-indigo-100 pb-4">
+                <h2 id="settings-title" class="text-2xl font-bold text-slate-700 flex items-center">
+                    <i class="fas fa-gear text-indigo-500 mr-3"></i> Pengaturan
+                </h2>
+                <button id="settings-close" type="button" aria-label="Tutup pengaturan"
+                    class="w-9 h-9 rounded-full bg-white/70 border border-white text-gray-500 hover:text-red-500 hover:bg-white transition-all flex items-center justify-center">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Tab Nav -->
+            <div class="flex flex-wrap gap-2 mb-6" role="tablist">
+                <button type="button" data-tab="ai" class="settings-tab px-4 py-2 rounded-xl text-sm font-semibold transition-all">
+                    <i class="fas fa-robot mr-1"></i> Penyedia AI
+                </button>
+                <button type="button" data-tab="sync" class="settings-tab px-4 py-2 rounded-xl text-sm font-semibold transition-all">
+                    <i class="fas fa-rotate mr-1"></i> Sinkronisasi
+                </button>
+                <button type="button" data-tab="manual" class="settings-tab px-4 py-2 rounded-xl text-sm font-semibold transition-all">
+                    <i class="fas fa-pen-to-square mr-1"></i> Jadwal Manual
+                </button>
+                <button type="button" data-tab="alarm" class="settings-tab px-4 py-2 rounded-xl text-sm font-semibold transition-all">
+                    <i class="fas fa-bell mr-1"></i> Alarm
+                </button>
+            </div>
+
+            <!-- Tab: Penyedia AI -->
+            <div id="panel-ai" class="settings-panel space-y-4">
+                <label class="flex items-center justify-between gap-4 bg-white/60 border border-white rounded-xl px-4 py-3 cursor-pointer">
+                    <span class="font-semibold text-slate-700 text-sm">
+                        <i class="fas fa-toggle-on text-indigo-500 mr-1"></i> Aktifkan pemeriksaan AI
+                    </span>
+                    <input type="checkbox" id="ai-enabled" class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                </label>
+
+                <div>
+                    <label for="ai-provider" class="block text-sm font-semibold text-slate-600 mb-1">Provider</label>
+                    <select id="ai-provider" class="w-full p-3 appearance-none bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-medium cursor-pointer">
+                        <option value="gemini">Gemini</option>
+                        <option value="openai">OpenAI-kompatibel</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="ai-apikey" class="block text-sm font-semibold text-slate-600 mb-1">API Key</label>
+                    <div class="relative">
+                        <input type="password" id="ai-apikey" placeholder="Masukkan API key..."
+                            class="w-full p-3 pr-12 bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-mono text-sm">
+                        <button type="button" id="ai-key-toggle" aria-label="Tampilkan API key"
+                            class="absolute inset-y-0 right-0 px-4 text-gray-400 hover:text-indigo-500 transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ai-baseurl-row" class="hidden">
+                    <label for="ai-baseurl" class="block text-sm font-semibold text-slate-600 mb-1">Base URL</label>
+                    <input type="text" id="ai-baseurl" placeholder="https://api.openai.com/v1"
+                        class="w-full p-3 bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-mono text-sm">
+                    <p class="text-xs text-gray-400 mt-1">Bisa juga menunjuk LM Studio / Ollama (mis. http://localhost:1234/v1).</p>
+                </div>
+
+                <div>
+                    <label for="ai-model" class="block text-sm font-semibold text-slate-600 mb-1">Model</label>
+                    <input type="text" id="ai-model" placeholder="gemini-2.0-flash"
+                        class="w-full p-3 bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-mono text-sm">
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" id="ai-test-btn"
+                        class="btn-primary text-white font-bold py-2.5 px-5 rounded-xl text-sm active:scale-95 transition-transform">
+                        <i class="fas fa-plug-circle-bolt mr-1"></i> Uji Koneksi
+                    </button>
+                    <span id="ai-test-status" class="text-sm font-medium text-gray-500"></span>
+                </div>
+
+                <p class="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-circle-info text-amber-500 mr-1"></i>
+                    AI hanya sanity-check; kalkulasi astronomis tetap sumber utama jadwal sholat.
+                </p>
+            </div>
+
+            <!-- Tab: Sinkronisasi -->
+            <div id="panel-sync" class="settings-panel space-y-4 hidden">
+                <div class="bg-white/60 border border-white rounded-xl px-4 py-3 space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500 font-medium">Sinkron terakhir</span>
+                        <span id="sync-last" class="font-semibold text-slate-700">Belum pernah</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500 font-medium">Sumber aktif</span>
+                        <span id="sync-source" class="font-bold px-3 py-1 rounded-full text-xs">—</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="text-gray-500 border-b border-gray-200">
+                                <th class="py-2 pr-3 font-semibold">Waktu</th>
+                                <th class="py-2 pr-3 font-semibold">Kalkulasi</th>
+                                <th class="py-2 font-semibold">AI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700 font-medium">
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 pr-3">Dzuhur</td>
+                                <td id="sync-calc-dhuhr" class="py-2 pr-3">—</td>
+                                <td id="sync-ai-dhuhr" class="py-2">—</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 pr-3">Ashar</td>
+                                <td id="sync-calc-ashr" class="py-2 pr-3">—</td>
+                                <td id="sync-ai-ashr" class="py-2">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" id="sync-now-btn"
+                        class="btn-primary text-white font-bold py-2.5 px-5 rounded-xl text-sm active:scale-95 transition-transform">
+                        <i class="fas fa-rotate mr-1"></i> Sinkron Sekarang
+                    </button>
+                    <span id="sync-status" class="text-sm font-medium text-gray-500"></span>
+                </div>
+                <p class="text-xs text-gray-400">Auto-sync berjalan sekali sehari saat aplikasi dibuka (fallback kalkulasi offline).</p>
+            </div>
+
+            <!-- Tab: Jadwal Sholat Manual -->
+            <div id="panel-manual" class="settings-panel space-y-4 hidden">
+                <label class="flex items-center justify-between gap-4 bg-white/60 border border-white rounded-xl px-4 py-3 cursor-pointer">
+                    <span class="font-semibold text-slate-700 text-sm">
+                        <i class="fas fa-hand text-indigo-500 mr-1"></i> Override manual
+                    </span>
+                    <input type="checkbox" id="manual-override" class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                </label>
+
+                <div id="manual-fields" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="manual-dhuhr" class="block text-sm font-semibold text-slate-600 mb-1">Dzuhur</label>
+                        <input type="time" id="manual-dhuhr"
+                            class="w-full p-3 bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-semibold">
+                    </div>
+                    <div>
+                        <label for="manual-ashr" class="block text-sm font-semibold text-slate-600 mb-1">Ashar</label>
+                        <input type="time" id="manual-ashr"
+                            class="w-full p-3 bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-semibold">
+                    </div>
+                </div>
+
+                <fieldset id="manual-scope" class="bg-white/60 border border-white rounded-xl px-4 py-3">
+                    <legend class="text-xs font-semibold text-gray-500 px-2">Berlaku</legend>
+                    <div class="flex flex-wrap gap-4 text-sm text-slate-700 font-medium">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="manual-scope" value="today" class="w-4 h-4 accent-indigo-600"> Hari ini saja
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="manual-scope" value="always" class="w-4 h-4 accent-indigo-600"> Terus-menerus (sebagai fallback)
+                        </label>
+                    </div>
+                </fieldset>
+
+                <p class="text-xs text-gray-500 bg-sky-50 border border-sky-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-shield-halved text-sky-500 mr-1"></i>
+                    Override manual adalah jaring pengaman saat offline / kalkulasi gagal.
+                </p>
+            </div>
+
+            <!-- Tab: Alarm -->
+            <div id="panel-alarm" class="settings-panel space-y-4 hidden">
+                <div class="flex items-center justify-between gap-4 bg-white/60 border border-white rounded-xl px-4 py-3">
+                    <span class="font-semibold text-slate-700 text-sm">
+                        <i class="fas fa-clock text-indigo-500 mr-1"></i> Bunyikan bel sebelum waktu sholat
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="alarm-offset-dec" aria-label="Kurangi menit"
+                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 transition-colors">−</button>
+                        <input type="number" id="alarm-offset" min="0" max="60" step="1" value="10"
+                            class="w-16 text-center p-2 bg-white border border-gray-200 rounded-lg outline-none font-bold text-slate-700">
+                        <span class="text-sm text-gray-500 font-medium">menit</span>
+                        <button type="button" id="alarm-offset-inc" aria-label="Tambah menit"
+                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 transition-colors">+</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 text-sm text-slate-700 font-medium bg-white/60 border border-white rounded-xl px-4 py-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="alarm-dhuhr" class="w-4 h-4 accent-indigo-600"> Dzuhur
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="alarm-ashr" class="w-4 h-4 accent-indigo-600"> Ashar
+                    </label>
+                </div>
+
+                <div>
+                    <label for="alarm-sound" class="block text-sm font-semibold text-slate-600 mb-1">Suara alarm</label>
+                    <select id="alarm-sound"
+                        class="w-full p-3 appearance-none bg-white/70 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 font-medium cursor-pointer"></select>
+                </div>
+
+                <p id="alarm-preview" class="text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">—</p>
+
+                <button type="button" id="alarm-test-btn"
+                    class="btn-primary text-white font-bold py-2.5 px-5 rounded-xl text-sm active:scale-95 transition-transform">
+                    <i class="fas fa-play mr-1"></i> Test Bunyikan
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-indigo-100">
+                <button type="button" id="settings-cancel"
+                    class="font-semibold text-gray-500 hover:text-gray-700 py-2.5 px-5 rounded-xl transition-colors">
+                    Batal
+                </button>
+                <button type="button" id="settings-save"
+                    class="btn-primary text-white font-bold py-2.5 px-7 rounded-xl active:scale-95 transition-transform">
+                    <i class="fas fa-floppy-disk mr-1"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="lib/PrayTimes.js"></script>
+    <script src="js/prayer-utils.js"></script>
+    <script src="js/prayer-sync.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const unlockDiv = document.getElementById("audio-unlock");
+            const enableAudioBtn = document.getElementById("enable-audio");
+
+            enableAudioBtn.addEventListener("click", () => {
+                const silentAudio = new Audio();
+                silentAudio.src = "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA...";
+                silentAudio.play().catch(() => {});
+
+                if (Tone.context.state !== "running") {
+                    Tone.start();
+                }
+
+                unlockDiv.style.opacity = '0';
+                setTimeout(() => {
+                    unlockDiv.style.display = "none";
+                }, 500);
+
+                playSuccessTone();
+            });
+
+            function playSuccessTone() {
+                const synth = new Tone.Synth().toDestination();
+                synth.triggerAttackRelease("C5", "8n");
+            }
+
+            const regularSchedule = [
+                { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
+                { time: "09:15:00", label: "Pergantian Jam Pelajaran", sound: "changePeriod" },
+                { time: "10:25:00", label: "Waktu Istirahat", sound: "startBreak" },
+                { time: "10:50:00", label: "Akhir Istirahat", sound: "endBreak" },
+                { time: "14:00:00", label: "Bangun Tidur", sound: "bangunTidur" }
+            ];
+
+            const mondaySchedule = [
+                { time: "07:15:00", label: "Upacara Bendera", sound: "flagCeremony" },
+                ...regularSchedule.slice(1)
+            ];
+
+            const fridaySchedule = [
+                { time: "07:15:00", label: "Masuk & Jam Pelajaran ke-1", sound: "startPeriod" },
+                { time: "10:25:00", label: "Waktu Pulang Sekolah", sound: "dismissal" }
+            ];
+
+            // --- INDEXEDDB SETUP UNTUK OFFLINE AUDIO ---
+            const dbName = "AutoBellDB";
+            const storeName = "audioFiles";
+            let db;
+
+            async function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(dbName, 1);
+                    request.onupgradeneeded = (event) => {
+                        db = event.target.result;
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName);
+                        }
+                    };
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+            async function saveAudioToDB(key, blob) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], "readwrite");
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(blob, key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async function getAudioFromDB(key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], "readonly");
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async function fetchAndCacheAudio(url, key) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const blob = await response.blob();
+                    await saveAudioToDB(key, blob);
+                    return blob;
+                } catch (error) {
+                    console.warn("Gagal mendownload audio, mungkin sedang offline:", error);
+                    return null;
+                }
+            }
+
+            const soundsUrls = {
+                startPeriod: `https://m3920-source.github.io/autobell/audio/masuk.mp3`,
+                changePeriod: `https://m3920-source.github.io/autobell/audio/ganti_pelajaran.mp3`,
+                startBreak: `https://m3920-source.github.io/autobell/audio/istirahat.mp3`,
+                endBreak: `https://m3920-source.github.io/autobell/audio/masuk.mp3`,
+                dismissal: `https://m3920-source.github.io/autobell/audio/pulang.mp3`,
+                flagCeremony: `https://m3920-source.github.io/autobell/audio/apelpagi.mp3`,
+                bangunTidur: `https://m3920-source.github.io/autobell/audio/bangun.mp3`,
+                // Path lokal relatif; ganti ke audio/adzan.mp3 bila tersedia
+                prayerReminder: `https://m3920-source.github.io/autobell/audio/persiapansholat.mp3`
+            };
+
+            async function preloadAudioFiles() {
+                try {
+                    if(!db) await initDB();
+                    for (const [key, url] of Object.entries(soundsUrls)) {
+                        const blob = await getAudioFromDB(key);
+                        if (!blob) {
+                            console.log(`Caching ${key} ke IndexedDB...`);
+                            await fetchAndCacheAudio(url, key);
+                        }
+                    }
+                    console.log("Semua audio telah tersimpan di IndexedDB (Siap Offline).");
+                } catch (e) {
+                    console.error("Gagal melakukan preload audio:", e);
+                }
+            }
+
+            const playAudio = async (soundKey) => {
+                const url = soundsUrls[soundKey];
+                try {
+                    if(!db) await initDB();
+                    let blob = await getAudioFromDB(soundKey);
+
+                    if (!blob) {
+                        // Jika offline saat ini, fetchAndCacheAudio akan gagal dan mengembalikan null
+                        blob = await fetchAndCacheAudio(url, soundKey);
+                    }
+
+                    let audioUrl = url;
+                    if (blob) {
+                        // Membuat URL lokal dari file Blob yang tersimpan
+                        audioUrl = URL.createObjectURL(blob);
+                    }
+
+                    const audio = new Audio(audioUrl);
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error("Audio playback error:", error);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Error IndexedDB:", err);
+                    new Audio(url).play().catch(e => console.error(e)); // Fallback jaringan jika DB error
+                }
+            };
+
+            const sounds = {
+                startPeriod: () => playAudio('startPeriod'),
+                changePeriod: () => playAudio('changePeriod'),
+                startBreak: () => playAudio('startBreak'),
+                endBreak: () => playAudio('endBreak'),
+                dismissal: () => playAudio('dismissal'),
+                flagCeremony: () => playAudio('flagCeremony'),
+                bangunTidur: () => playAudio('bangunTidur'),
+                prayerReminder: () => playAudio('prayerReminder')
+            };
+
+            const soundLabels = {
+                flagCeremony: "Bel Upacara Bendera",
+                startPeriod: "Bel Masuk Pelajaran",
+                changePeriod: "Bel Ganti Pelajaran",
+                startBreak: "Bel Mulai Istirahat",
+                endBreak: "Bel Akhir Istirahat",
+                dismissal: "Bel Pulang Sekolah",
+                bangunTidur: "Bel Bangun Tidur",
+                prayerReminder: "Bel Pengingat Sholat"
+            };
+
+            const clockDisplay = document.getElementById('clock-display');
+            const dateDisplay = document.getElementById('date-display');
+            const statusDisplay = document.getElementById('status-display');
+            const scheduleList = document.getElementById('schedule-list');
+            const scheduleTitle = document.getElementById('schedule-title');
+            const manualBellSelect = document.getElementById('manual-bell-select');
+            const playManualBtn = document.getElementById('play-manual-btn');
+
+            let lastScrolledId = null;
+            // Jadwal hari ini (statis sekolah + pengingat sholat), direbuild oleh rebuildSchedule()
+            let todaySchedule = [];
+
+            function getStaticSchedule() {
+                const day = new Date().getDay();
+                if (day === 1) return mondaySchedule;
+                if (day === 5) return fridaySchedule;
+                return regularSchedule;
+            }
+
+            function rebuildSchedule() {
+                const settings = AutoBellSync.loadSettings();
+                const prayerItems = [];
+                let active = null;
+                try {
+                    active = AutoBellSync.getActiveTimes(new Date());
+                } catch (e) {
+                    console.warn("Gagal mendapatkan waktu sholat:", e);
+                }
+
+                // No prayer reminders on Friday: only the two static bells (07:15 & 10:25) ring.
+                const isPrayerReminderDay = PrayerUtils.shouldAddPrayerReminders(new Date().getDay());
+
+                if (isPrayerReminderDay && active && active.dhuhr && active.ashr !== undefined) {
+                    const offset = settings.alarm.offsetMinutes;
+                    const targets = [];
+                    if (settings.prayers.dhuhr && active.dhuhr) targets.push({ label: "Dzuhur", time: active.dhuhr });
+                    if (settings.prayers.ashr && active.ashr) targets.push({ label: "Ashar", time: active.ashr });
+
+                    for (const target of targets) {
+                        const reminderTime = PrayerUtils.computeReminderTime(target.time, offset);
+                        if (reminderTime) {
+                            prayerItems.push({
+                                time: reminderTime,
+                                label: `Pengingat Sholat ${target.label} (${offset} menit lagi)`,
+                                sound: settings.alarm.sound || "prayerReminder"
+                            });
+                        }
+                    }
+                }
+
+                todaySchedule = PrayerUtils.mergeSchedules(getStaticSchedule(), prayerItems);
+                populateSchedule();
+            }
+
+            function formatIndonesianDate(date) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('id-ID', options);
+            }
+
+            function populateSchedule() {
+                const dayName = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
+                scheduleTitle.innerHTML = `<i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Jadwal Hari ${dayName}`;
+
+                scheduleList.innerHTML = '';
+
+                if(todaySchedule.length === 0) {
+                     scheduleList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada jadwal bel hari ini.</p>';
+                     return;
+                }
+
+                todaySchedule.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'schedule-item flex items-center justify-between p-4 rounded-xl transition-all duration-300 mb-2';
+                    // ID unik memakai index agar dua item pada jam sama tidak bentrok
+                    div.id = `schedule-${item.time.replace(/:/g, '')}-${index}`;
+                    div.dataset.time = item.time;
+                    div.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 p-2 rounded-lg mr-4 text-indigo-600">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg text-slate-700">${item.time.substring(0, 5)}</p>
+                                <p class="text-sm text-slate-500 font-medium">${item.label}</p>
+                            </div>
+                        </div>
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle text-gray-300 text-xl transition-colors duration-300"></i>
+                        </div>
+                    `;
+                    scheduleList.appendChild(div);
+                });
+            }
+
+            function populateManualControls() {
+                manualBellSelect.innerHTML = '';
+                for (const soundKey in soundLabels) {
+                    const option = document.createElement('option');
+                    option.value = soundKey;
+                    option.textContent = soundLabels[soundKey];
+                    manualBellSelect.appendChild(option);
+                }
+            }
+
+            function tick() {
+                const now = new Date();
+                const timeString = now.toTimeString().split(' ')[0]; // HH:MM:SS
+
+                // PERBAIKAN: Menampilkan HH:MM:SS dalam satu ukuran yang sama
+                clockDisplay.textContent = timeString;
+
+                dateDisplay.textContent = formatIndonesianDate(now);
+
+                // Window grace 90 detik: tick bisa terlewat saat tab di-throttle browser
+                // (tab background jalan ~1x/menit), jadi bel yang jatuh <90 detik lalu masih dibunyikan.
+                const nowSeconds = PrayerUtils.parseTimeToSeconds(timeString);
+                const dueItems = PrayerUtils.findDueItems(todaySchedule, nowSeconds, 90);
+
+                for (const scheduledItem of dueItems) {
+                    const firedKey = PrayerUtils.buildFiredKey(AutoBellSync.todayStr(now), scheduledItem.time, scheduledItem.sound);
+                    if (!AutoBellSync.firedHas(firedKey)) {
+                        AutoBellSync.firedAdd(firedKey);
+                        sounds[scheduledItem.sound]();
+                        statusDisplay.innerHTML = `<span class="flex items-center animate-pulse"><i class="fas fa-volume-up text-green-500 mr-2"></i> Membunyikan: ${scheduledItem.label}</span>`;
+                        statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-green-100 rounded-2xl px-6 py-4 text-green-700 font-bold text-lg shadow-inner transition-all duration-300 border border-green-200 transform scale-105";
+
+                        setTimeout(() => {
+                            statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100";
+                        }, 5000);
+                    }
+                }
+
+                updateScheduleHighlight(timeString);
+            }
+
+            function updateScheduleHighlight(currentTimeString) {
+                let nextBellTime = null;
+
+                for (const item of todaySchedule) {
+                    if (item.time > currentTimeString) {
+                        nextBellTime = item.time;
+                        break;
+                    }
+                }
+
+                if (!nextBellTime && todaySchedule.length > 0) {
+                     const firstBell = todaySchedule[0].time;
+                     if(firstBell > currentTimeString) nextBellTime = firstBell;
+                }
+
+                if (!statusDisplay.innerHTML.includes('Membunyikan') && !statusDisplay.innerHTML.includes('Bel manual')) {
+                     if (nextBellTime) {
+                         const timeParts = nextBellTime.split(':');
+                         statusDisplay.innerHTML = `<span class="flex items-center"><i class="far fa-clock text-indigo-500 mr-2"></i> Berikutnya: ${timeParts[0]}:${timeParts[1]}</span>`;
+                     } else {
+                         statusDisplay.innerHTML = `<span class="text-gray-400">Semua jadwal selesai hari ini.</span>`;
+                     }
+                }
+
+                document.querySelectorAll('.schedule-item').forEach(el => {
+                    el.classList.remove('next', 'played');
+                    const time = el.dataset.time;
+                    if (!time) return;
+
+                    const checkIcon = el.querySelector('.fa-check-circle');
+
+                    if (time < currentTimeString) {
+                        el.classList.add('played');
+                        if(checkIcon) {
+                            checkIcon.classList.remove('text-gray-300');
+                            checkIcon.classList.add('text-green-500');
+                        }
+                    } else if (time === nextBellTime) {
+                        el.classList.add('next');
+                         if(checkIcon) {
+                            checkIcon.classList.remove('text-green-500');
+                            checkIcon.classList.add('text-indigo-500');
+                        }
+
+                        // Auto Scroll: arahkan item jadwal ini ke tengah daftar dengan mulus
+                        if (lastScrolledId !== el.id) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            lastScrolledId = el.id;
+                        }
+                    } else {
+                        if(checkIcon) {
+                            checkIcon.classList.remove('text-green-500', 'text-indigo-500');
+                            checkIcon.classList.add('text-gray-300');
+                        }
+                    }
+                });
+            }
+
+            function playManualBell() {
+                const selectedSound = manualBellSelect.value;
+                if (selectedSound && sounds[selectedSound]) {
+                    sounds[selectedSound]();
+                    statusDisplay.innerHTML = `<span class="flex items-center"><i class="fas fa-volume-up text-blue-500 mr-2"></i> Manual: ${soundLabels[selectedSound]}</span>`;
+                    statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-blue-100 rounded-2xl px-6 py-4 text-blue-700 font-bold text-lg shadow-inner transition-all duration-300 border border-blue-200 transform scale-105";
+
+                    setTimeout(() => {
+                        statusDisplay.className = "mt-6 w-full max-w-lg flex items-center justify-center bg-indigo-50/80 rounded-2xl px-6 py-4 text-indigo-700 font-bold text-lg shadow-inner transition-all duration-300 border border-indigo-100";
+                    }, 5000);
+                }
+            }
+
+            function init() {
+                preloadAudioFiles(); // Cache semua file audio di latar belakang
+                populateManualControls();
+                rebuildSchedule();
+                populateAlarmSoundOptions();
+
+                // Sinkron jadwal sholat sekali sehari (non-blocking, fallback kalkulasi jika gagal)
+                AutoBellSync.syncIfNewDay()
+                    .then(result => {
+                        if (result && result.ok && !result.skipped) rebuildSchedule();
+                    })
+                    .catch(err => console.warn("Sinkron jadwal sholat gagal:", err));
+
+                setInterval(() => {
+                    const currentDay = new Date().getDay();
+                    if (window.currentDay !== currentDay) {
+                        window.currentDay = currentDay;
+                        rebuildSchedule();
+                        AutoBellSync.syncIfNewDay()
+                            .then(result => {
+                                if (result && result.ok && !result.skipped) rebuildSchedule();
+                            })
+                            .catch(err => console.warn("Sinkron jadwal sholat gagal:", err));
+                    }
+                    tick();
+                }, 1000);
+
+                window.currentDay = new Date().getDay();
+                playManualBtn.addEventListener('click', playManualBell);
+                setupSettingsModal();
+                tick();
+
+                // Catch-up: saat tab dibuka kembali dari throttling/freeze (Edge sleeping tab,
+                // tab tersembunyi, layar terkunci), timer boleh telat — bel yang jatuh di window
+                // grace 90 detik tetap dibunyikan segera.
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) tick();
+                });
+                window.addEventListener('focus', tick);
+            }
+
+            // ================= SETTINGS MODAL LOGIC =================
+            const settingsModal = document.getElementById('settings-modal');
+
+            function openSettingsModal() {
+                fillSettingsForm();
+                switchSettingsTab('ai');
+                settingsModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSettingsModal() {
+                settingsModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            function switchSettingsTab(name) {
+                document.querySelectorAll('.settings-tab').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === name);
+                });
+                document.querySelectorAll('.settings-panel').forEach(panel => {
+                    panel.classList.toggle('hidden', panel.id !== `panel-${name}`);
+                });
+                if (name === 'sync') renderSyncPanel();
+                if (name === 'alarm') updateAlarmPreview();
+            }
+
+            function fillSettingsForm() {
+                const settings = AutoBellSync.loadSettings();
+                document.getElementById('ai-enabled').checked = settings.ai.enabled;
+                document.getElementById('ai-provider').value = settings.ai.provider;
+                document.getElementById('ai-apikey').value = settings.ai.apiKey;
+                document.getElementById('ai-baseurl').value = settings.ai.baseUrl;
+                document.getElementById('ai-model').value = settings.ai.model;
+                toggleBaseUrlRow();
+
+                document.getElementById('manual-override').checked = settings.prayers.manualOverride;
+                document.getElementById('manual-dhuhr').value = settings.prayers.manualDhuhr;
+                document.getElementById('manual-ashr').value = settings.prayers.manualAshar;
+                const scopeRadio = document.querySelector(`input[name="manual-scope"][value="${settings.prayers.manualScope}"]`);
+                if (scopeRadio) scopeRadio.checked = true;
+                toggleManualFields();
+
+                document.getElementById('alarm-offset').value = settings.alarm.offsetMinutes;
+                document.getElementById('alarm-dhuhr').checked = settings.prayers.dhuhr;
+                document.getElementById('alarm-ashr').checked = settings.prayers.ashr;
+                document.getElementById('alarm-sound').value = settings.alarm.sound;
+            }
+
+            function toggleBaseUrlRow() {
+                const isCustom = document.getElementById('ai-provider').value === 'openai';
+                document.getElementById('ai-baseurl-row').classList.toggle('hidden', !isCustom);
+            }
+
+            function toggleManualFields() {
+                const enabled = document.getElementById('manual-override').checked;
+                document.getElementById('manual-fields').classList.toggle('opacity-40', !enabled);
+                document.getElementById('manual-fields').classList.toggle('pointer-events-none', !enabled);
+                document.getElementById('manual-scope').classList.toggle('opacity-40', !enabled);
+                document.getElementById('manual-scope').classList.toggle('pointer-events-none', !enabled);
+            }
+
+            function populateAlarmSoundOptions() {
+                const select = document.getElementById('alarm-sound');
+                select.innerHTML = '';
+                for (const soundKey in soundLabels) {
+                    const option = document.createElement('option');
+                    option.value = soundKey;
+                    option.textContent = soundLabels[soundKey];
+                    select.appendChild(option);
+                }
+            }
+
+            function renderSyncPanel() {
+                const sync = AutoBellSync.readSync();
+                const lastEl = document.getElementById('sync-last');
+                const sourceEl = document.getElementById('sync-source');
+
+                lastEl.textContent = (sync && sync.lastSyncAt)
+                    ? new Date(sync.lastSyncAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+                    : 'Belum pernah';
+
+                let active = null;
+                try { active = AutoBellSync.getActiveTimes(new Date()); } catch (e) { active = null; }
+                const source = active ? active.source : null;
+                const sourceStyles = {
+                    ai: ['AI ✓', 'bg-green-100 text-green-700'],
+                    calc: ['Kalkulasi ✓', 'bg-sky-100 text-sky-700'],
+                    manual: ['Manual ⚠', 'bg-amber-100 text-amber-700']
+                };
+                const [label, cls] = sourceStyles[source] || ['—', 'bg-gray-100 text-gray-500'];
+                sourceEl.textContent = label;
+                sourceEl.className = `font-bold px-3 py-1 rounded-full text-xs ${cls}`;
+
+                document.getElementById('sync-calc-dhuhr').textContent = (sync && sync.calc && sync.calc.dhuhr) || '—';
+                document.getElementById('sync-calc-ashr').textContent = (sync && sync.calc && sync.calc.ashr) || '—';
+                document.getElementById('sync-ai-dhuhr').textContent = (sync && sync.ai && sync.ai.dhuhr) || '—';
+                document.getElementById('sync-ai-ashr').textContent = (sync && sync.ai && sync.ai.ashr) || '—';
+            }
+
+            function updateAlarmPreview() {
+                const offsetInput = document.getElementById('alarm-offset');
+                const offset = Math.max(0, Math.min(60, Number(offsetInput.value) || 0));
+                const dhuhrOn = document.getElementById('alarm-dhuhr').checked;
+                const ashrOn = document.getElementById('alarm-ashr').checked;
+                const previewEl = document.getElementById('alarm-preview');
+
+                let active = null;
+                try { active = AutoBellSync.getActiveTimes(new Date()); } catch (e) { active = null; }
+                if (!active) {
+                    previewEl.textContent = 'Jadwal sholat belum tersedia (kalkulasi gagal).';
+                    return;
+                }
+
+                const parts = [];
+                if (dhuhrOn && active.dhuhr) {
+                    const reminder = PrayerUtils.computeReminderTime(active.dhuhr, offset);
+                    parts.push(`Dzuhur ${active.dhuhr} → bel bunyi ${reminder ? reminder.substring(0, 5) : '—'}`);
+                }
+                if (ashrOn && active.ashr) {
+                    const reminder = PrayerUtils.computeReminderTime(active.ashr, offset);
+                    parts.push(`Ashar ${active.ashr} → bel bunyi ${reminder ? reminder.substring(0, 5) : '—'}`);
+                }
+                previewEl.textContent = parts.length ? parts.join('  |  ') : 'Tidak ada sholat yang dipilih.';
+            }
+
+            function saveSettingsFromForm() {
+                const settings = {
+                    ai: {
+                        enabled: document.getElementById('ai-enabled').checked,
+                        provider: document.getElementById('ai-provider').value,
+                        apiKey: document.getElementById('ai-apikey').value.trim(),
+                        baseUrl: document.getElementById('ai-baseurl').value.trim() || AutoBellSync.DEFAULT_SETTINGS.ai.baseUrl,
+                        model: document.getElementById('ai-model').value.trim()
+                    },
+                    prayers: {
+                        dhuhr: document.getElementById('alarm-dhuhr').checked,
+                        ashr: document.getElementById('alarm-ashr').checked,
+                        manualOverride: document.getElementById('manual-override').checked,
+                        manualDhuhr: document.getElementById('manual-dhuhr').value || AutoBellSync.DEFAULT_SETTINGS.prayers.manualDhuhr,
+                        manualAshar: document.getElementById('manual-ashr').value || AutoBellSync.DEFAULT_SETTINGS.prayers.manualAshar,
+                        manualScope: (document.querySelector('input[name="manual-scope"]:checked') || {}).value || 'always'
+                    },
+                    alarm: {
+                        offsetMinutes: Math.max(0, Math.min(60, Number(document.getElementById('alarm-offset').value) || 10)),
+                        sound: document.getElementById('alarm-sound').value || 'prayerReminder'
+                    }
+                };
+                AutoBellSync.saveSettings(settings);
+                rebuildSchedule();
+            }
+
+            function setupSettingsModal() {
+                document.getElementById('open-settings').addEventListener('click', openSettingsModal);
+                document.getElementById('settings-close').addEventListener('click', closeSettingsModal);
+                document.getElementById('settings-cancel').addEventListener('click', closeSettingsModal);
+                settingsModal.addEventListener('click', (e) => {
+                    if (e.target === settingsModal) closeSettingsModal();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && !settingsModal.classList.contains('hidden')) closeSettingsModal();
+                });
+
+                document.querySelectorAll('.settings-tab').forEach(btn => {
+                    btn.addEventListener('click', () => switchSettingsTab(btn.dataset.tab));
+                });
+
+                document.getElementById('ai-provider').addEventListener('change', toggleBaseUrlRow);
+                document.getElementById('manual-override').addEventListener('change', toggleManualFields);
+
+                document.getElementById('ai-key-toggle').addEventListener('click', () => {
+                    const input = document.getElementById('ai-apikey');
+                    const icon = document.querySelector('#ai-key-toggle i');
+                    const showing = input.type === 'text';
+                    input.type = showing ? 'password' : 'text';
+                    icon.className = showing ? 'fas fa-eye' : 'fas fa-eye-slash';
+                });
+
+                document.getElementById('ai-test-btn').addEventListener('click', async () => {
+                    const btn = document.getElementById('ai-test-btn');
+                    const statusEl = document.getElementById('ai-test-status');
+                    // Simpan sementara agar testConnection memakai input form terbaru
+                    saveSettingsFromForm();
+                    btn.disabled = true;
+                    statusEl.textContent = 'Menguji...';
+                    statusEl.className = 'text-sm font-medium text-gray-500';
+                    try {
+                        const result = await AutoBellSync.testConnection();
+                        statusEl.textContent = result.message;
+                        statusEl.className = `text-sm font-medium ${result.ok ? 'text-green-600' : 'text-red-500'}`;
+                    } catch (err) {
+                        statusEl.textContent = `Gagal: ${err.message}`;
+                        statusEl.className = 'text-sm font-medium text-red-500';
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+
+                document.getElementById('sync-now-btn').addEventListener('click', async () => {
+                    const btn = document.getElementById('sync-now-btn');
+                    const statusEl = document.getElementById('sync-status');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-rotate fa-spin mr-1"></i> Menyinkronkan...';
+                    statusEl.textContent = '';
+                    try {
+                        const result = await AutoBellSync.syncNow();
+                        renderSyncPanel();
+                        rebuildSchedule();
+                        if (result.ok) {
+                            const sourceUsed = result.status ? result.status.source : null;
+                            const sourceLabel = sourceUsed === 'ai' ? 'AI' : 'kalkulasi';
+                            statusEl.textContent = `Selesai (sumber: ${sourceLabel})`;
+                            statusEl.className = 'text-sm font-medium text-green-600';
+                        } else {
+                            statusEl.textContent = result.error || 'Sinkronisasi gagal';
+                            statusEl.className = 'text-sm font-medium text-red-500';
+                        }
+                    } catch (err) {
+                        statusEl.textContent = `Gagal: ${err.message}`;
+                        statusEl.className = 'text-sm font-medium text-red-500';
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-rotate mr-1"></i> Sinkron Sekarang';
+                    }
+                });
+
+                document.getElementById('alarm-offset-inc').addEventListener('click', () => {
+                    const input = document.getElementById('alarm-offset');
+                    input.value = Math.min(60, (Number(input.value) || 0) + 1);
+                    updateAlarmPreview();
+                });
+                document.getElementById('alarm-offset-dec').addEventListener('click', () => {
+                    const input = document.getElementById('alarm-offset');
+                    input.value = Math.max(0, (Number(input.value) || 0) - 1);
+                    updateAlarmPreview();
+                });
+                document.getElementById('alarm-offset').addEventListener('input', updateAlarmPreview);
+                document.getElementById('alarm-dhuhr').addEventListener('change', updateAlarmPreview);
+                document.getElementById('alarm-ashr').addEventListener('change', updateAlarmPreview);
+
+                document.getElementById('alarm-test-btn').addEventListener('click', () => {
+                    const soundKey = document.getElementById('alarm-sound').value;
+                    if (soundKey && sounds[soundKey]) {
+                        sounds[soundKey]();
+                    }
+                });
+
+                document.getElementById('settings-save').addEventListener('click', () => {
+                    saveSettingsFromForm();
+                    closeSettingsModal();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Pengaturan disimpan',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                });
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
